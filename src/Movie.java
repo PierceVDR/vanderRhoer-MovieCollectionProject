@@ -9,13 +9,13 @@ public class Movie {
   private String keywords;
   private String overview;
   private int runtime;
-  private String genres;
+  private String[] genres;
   private double userRating;
   private int year;
   private int revenue;
   
   public Movie(String title, String[] cast, String director, String tagline,
-                String keywords, String overview, int runtime, String genres,
+                String keywords, String overview, int runtime, String[] genres,
                 double userRating, int year, int revenue) {
     this.title = title;
     this.cast = cast;
@@ -37,18 +37,7 @@ public class Movie {
   public String[] getCast() {
     return cast;
   }
-  public String getCastText() {
-    String text = "";
-
-    int lastElement=cast.length-1;
-    for (int i=0; i<lastElement; i++) {
-      text+=cast[i];
-      text+=", ";
-    }
-    text+=cast[lastElement];
-
-    return text;
-  }
+  public String getCastText() {return getListed(cast);}
   
   public String getDirector() {
     return director;
@@ -70,9 +59,10 @@ public class Movie {
     return runtime;
   }
 
-  public String getGenres() {
+  public String[] getGenres() {
     return genres;
   }
+  public String getGenresText() {return getListed(genres);}
 
   public double getUserRating() {
     return userRating;
@@ -88,5 +78,19 @@ public class Movie {
       
   public String toString() {
     return "Title: " + title + ", Tagline: " + tagline; 
+  }
+
+
+  private String getListed(String[] phrases) { // Helper method for printing lists
+    String text = "";
+
+    int lastElement=phrases.length-1;
+    for (int i=0; i<lastElement; i++) {
+      text+=phrases[i];
+      text+=", ";
+    }
+    text+=phrases[lastElement];
+
+    return text;
   }
 }

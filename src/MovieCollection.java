@@ -8,6 +8,8 @@ import java.util.Scanner;
 public class MovieCollection {
   private ArrayList<Movie> movies;
   private ArrayList<String> actors;
+
+  private ArrayList<String> allGenres;
   private Scanner scanner;
 
   public MovieCollection(String fileName) {
@@ -60,6 +62,8 @@ public class MovieCollection {
   private void importMovieList(String fileName) {
     try {
       movies = new ArrayList<Movie>();
+      actors = new ArrayList<String>();
+      allGenres = new ArrayList<String>();
       FileReader fileReader = new FileReader(fileName);
       BufferedReader bufferedReader = new BufferedReader(fileReader);
       String line = bufferedReader.readLine();
@@ -80,7 +84,7 @@ public class MovieCollection {
         String keywords = movieFromCSV[4];
         String overview = movieFromCSV[5];
         int runtime = Integer.parseInt(movieFromCSV[6]);
-        String genres = movieFromCSV[7];
+        String[] genres = movieFromCSV[7].split("\\|");
         double userRating = Double.parseDouble(movieFromCSV[8]);
         int year = Integer.parseInt(movieFromCSV[9]);
         int revenue = Integer.parseInt(movieFromCSV[10]);
@@ -95,20 +99,12 @@ public class MovieCollection {
         movies.add(thisMovie);
 
         // Add to list of actors in correct spot:
-        for (String actor : cast) {
-
-          // Find its spot in the list of actors
-          int i = 0;
-          int comparison = -1;
-          while ( i<actors.size() && (comparison = actor.compareTo(actors.get(i))) > 0) {
-            i++;
-          }
-
-          // Place actor's name in list if it hasn't already been added
-          if (comparison!=0) {actors.add(i,actor);}
-        }
-
+        addAllNoDuplicates(cast,actors);
+        addAllNoDuplicates(genres,allGenres);
       }
+
+
+
       bufferedReader.close();
     } catch(IOException exception) {
       System.out.println("Unable to access " + exception.getMessage());
@@ -137,6 +133,7 @@ public class MovieCollection {
     System.out.println("Year: " + movie.getYear());
     System.out.println("Directed by: " + movie.getDirector());
     System.out.println("Cast: " + movie.getCastText());
+    System.out.println("Genre(s): " + movie.getGenresText());
     System.out.println("Overview: " + movie.getOverview());
     System.out.println("User rating: " + movie.getUserRating());
     System.out.println("Box office revenue: " + movie.getRevenue());
@@ -158,7 +155,7 @@ public class MovieCollection {
       movieTitle = movieTitle.toLowerCase();
 
       if (movieTitle.indexOf(searchTerm) != -1) {
-        //add the Movie objest to the results list
+        //add the Movie object to the results list
         results.add(movies.get(i));
       }
     }
@@ -167,23 +164,8 @@ public class MovieCollection {
       // sort the results by title
       sortResults(results);
 
-      // now, display them all to the user
-      for (int i = 0; i < results.size(); i++) {
-        String title = results.get(i).getTitle();
-
-        // this will print index 0 as choice 1 in the results list; better for user!
-        int choiceNum = i + 1;
-        System.out.println("" + choiceNum + ". " + title);
-      }
-
-      System.out.println("Which movie would you like to learn more about?");
-      System.out.print("Enter number: ");
-      int choice = scanner.nextInt();
-      scanner.nextLine();
-      Movie selectedMovie = results.get(choice - 1);
-      displayMovieInfo(selectedMovie);
-      System.out.println("\n ** Press Enter to Return to Main Menu **");
-      scanner.nextLine();
+      printMatchingMovies(results);
+      askWhichMovie(results);
     } else {
       System.out.println("\nNo movie titles match that search term!");
       System.out.println("** Press Enter to Return to Main Menu **");
@@ -216,23 +198,8 @@ public class MovieCollection {
       // sort the results by title
       sortResults(results);
 
-      // now, display them all to the user
-      for (int i = 0; i < results.size(); i++) {
-        String title = results.get(i).getTitle();
-
-        // this will print index 0 as choice 1 in the results list; better for user!
-        int choiceNum = i + 1;
-        System.out.println("" + choiceNum + ". " + title);
-      }
-
-      System.out.println("Which movie would you like to learn more about?");
-      System.out.print("Enter number: ");
-      int choice = scanner.nextInt();
-      scanner.nextLine();
-      Movie selectedMovie = results.get(choice - 1);
-      displayMovieInfo(selectedMovie);
-      System.out.println("\n ** Press Enter to Return to Main Menu **");
-      scanner.nextLine();
+      printMatchingMovies(results);
+      askWhichMovie(results);
     } else {
       System.out.println("\nNo movie's keywords have that search term!");
       System.out.println("** Press Enter to Return to Main Menu **");
@@ -334,35 +301,69 @@ public class MovieCollection {
     System.out.println("Enter an actor's name: ");
     String searchTerm = scanner.nextLine().toLowerCase();
 
-    // Find names that match, also print out matching actors' names
+    // Find names that match, do NOT print out matching actors' names since there might be only 1 match
     ArrayList<String> matchingActors = new ArrayList<>();
     for (String actor : actors) {
       if ( actor.toLowerCase().contains(searchTerm) ) {
         matchingActors.add(actor);
-
-        System.out.println(matchingActors.size() + ". " + actor);
       }
     }
     // Because actors is already in alphabetical order, we don't need to sort matchingActors
 
+    String selectedActor;
     if (matchingActors.size()==0) { // Make sure that matching actors were found
       System.out.println("\nNo actors match that name!");
       System.out.println("** Press Enter to Return to Main Menu **");
       scanner.nextLine();
       return; // Early return to stop early
+
+    } else if (matchingActors.size()==1) { // Don't ask which actor if only one actor matches
+      selectedActor = matchingActors.get(0);
+    } else {
+
+      for (int i = 0; i<matchingActors.size(); i++) {
+        System.out.println(i+1 + ". " + matchingActors.get(i));
+      }
+
+      System.out.println("Which actor are you referring to?");
+      System.out.print("Enter number: ");
+      selectedActor = matchingActors.get(scanner.nextInt()-1);
+      scanner.nextLine();
     }
 
-    System.out.println("Which actor are you referring to?");
-    System.out.print("Enter number: ");
-    String selectedActor = matchingActors.get(scanner.nextInt()-1);
-    scanner.nextLine();
-
-    // Find movies with that actor, and also print them out
+    // Find movies with that actor, print them out
     ArrayList<Movie> matchingMovies = new ArrayList<>();
     for (Movie movie : movies) {
 
       for (String actor : movie.getCast()) {
         if (selectedActor.equals(actor)) {
+          matchingMovies.add(movie);
+          System.out.println(matchingMovies.size() + ". " + movie.getTitle());
+
+          break;
+        }
+      }
+
+    }
+
+    askWhichMovie(matchingMovies);
+  }
+
+  private void listGenres() {
+    for (int i = 0; i<allGenres.size(); i++) {
+      System.out.println(i+1 + ". " + allGenres.get(i));
+    }
+
+    System.out.println("Which would you like to see all the movies for?");
+    System.out.print("Enter number: ");
+    String selectedGenre = allGenres.get(scanner.nextInt()-1);
+    scanner.nextLine();
+
+    // Find movies with that genre, print them out
+    ArrayList<Movie> matchingMovies = new ArrayList<>();
+    for (Movie movie : movies) {
+      for (String genre : movie.getGenres()) {
+        if (genre.equals(selectedGenre)) {
           matchingMovies.add(movie);
           System.out.println(matchingMovies.size() + ". " + movie.getTitle());
           break;
@@ -371,6 +372,24 @@ public class MovieCollection {
 
     }
 
+    askWhichMovie(matchingMovies);
+  }
+  
+  private void listHighestRated() {
+    /* TASK 6: IMPLEMENT ME */
+  }
+  
+  private void listHighestRevenue() {
+    /* TASK 6: IMPLEMENT ME */
+  }
+
+  private void printMatchingMovies(ArrayList<Movie> matchingMovies) {
+    for (int i=0; i<matchingMovies.size(); i++) {
+      System.out.println(i+1 + ". " + matchingMovies.get(i).getTitle());
+    }
+  }
+
+  private void askWhichMovie(ArrayList<Movie> matchingMovies) {
     System.out.println("Which movie would you like to learn more about?");
     System.out.print("Enter number: ");
     int choice = scanner.nextInt();
@@ -380,16 +399,21 @@ public class MovieCollection {
     System.out.println("\n ** Press Enter to Return to Main Menu **");
     scanner.nextLine();
   }
-  
-  private void listGenres() {
-    /* TASK 5: IMPLEMENT ME */
-  }
-  
-  private void listHighestRated() {
-    /* TASK 6: IMPLEMENT ME */
-  }
-  
-  private void listHighestRevenue() {
-    /* TASK 6: IMPLEMENT ME */
+
+  private void addAllNoDuplicates(String[] data, ArrayList<String> addTo) {
+
+    for (String info : data) {
+
+      // Find its spot in the list of actors
+      int i = 0;
+      int comparison = -1;
+      while ( i<addTo.size() && (comparison = info.compareTo(addTo.get(i))) > 0) {
+        i++;
+      }
+
+      // Place actor's name in list if it hasn't already been added
+      if (comparison!=0) {addTo.add(i,info);}
+    }
+
   }
 }
