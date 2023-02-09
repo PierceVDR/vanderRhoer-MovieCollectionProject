@@ -3,7 +3,7 @@
  */
 public class Movie {
   private String title;
-  private String cast;
+  private String[] cast;
   private String director;
   private String tagline;
   private String keywords;
@@ -14,7 +14,7 @@ public class Movie {
   private int year;
   private int revenue;
   
-  public Movie(String title, String cast, String director, String tagline,
+  public Movie(String title, String[] cast, String director, String tagline,
                 String keywords, String overview, int runtime, String genres,
                 double userRating, int year, int revenue) {
     this.title = title;
@@ -34,8 +34,20 @@ public class Movie {
     return title;
   }
   
-  public String getCast() {
+  public String[] getCast() {
     return cast;
+  }
+  public String getCastText() {
+    String text = "";
+
+    int lastElement=cast.length-1;
+    for (int i=0; i<lastElement; i++) {
+      text+=cast[i];
+      text+=", ";
+    }
+    text+=cast[lastElement];
+
+    return text;
   }
   
   public String getDirector() {
