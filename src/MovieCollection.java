@@ -359,28 +359,68 @@ public class MovieCollection {
     String selectedGenre = allGenres.get(scanner.nextInt()-1);
     scanner.nextLine();
 
-    // Find movies with that genre, print them out
+    // Find movies with that genre
     ArrayList<Movie> matchingMovies = new ArrayList<>();
     for (Movie movie : movies) {
       for (String genre : movie.getGenres()) {
         if (genre.equals(selectedGenre)) {
           matchingMovies.add(movie);
-          System.out.println(matchingMovies.size() + ". " + movie.getTitle());
           break;
         }
       }
-
     }
 
+    sortResults(matchingMovies);
+    printMatchingMovies(matchingMovies);
     askWhichMovie(matchingMovies);
   }
   
   private void listHighestRated() {
-    /* TASK 6: IMPLEMENT ME */
+    ArrayList<Movie> topSortedMovies = new ArrayList<>();
+    final int numToList = 50; // Make it easier to change later
+    boolean removeLastAfterAdding = false; // boolean that becomes true once a 51st element appears, since we can delete it to save memory
+    for(int i=0; i<movies.size(); i++) {
+      Movie movie = movies.get(i);
+      int j = topSortedMovies.size();
+      removeLastAfterAdding = removeLastAfterAdding || j>=numToList;
+      while ( j>0 && (topSortedMovies.get(j-1).getUserRating()<movie.getUserRating()) ) {
+        j--;
+      }
+      if (j<numToList) {
+        topSortedMovies.add(j,movie);
+        if (removeLastAfterAdding) {topSortedMovies.remove(numToList);}
+      }
+    }
+
+    for (int i=0; i<numToList; i++) {
+      Movie movie = topSortedMovies.get(i);
+      System.out.println(i+1 + ". " + movie.getTitle() + ": " + movie.getUserRating());
+    }
+    askWhichMovie(topSortedMovies);
   }
   
   private void listHighestRevenue() {
-    /* TASK 6: IMPLEMENT ME */
+    ArrayList<Movie> topSortedMovies = new ArrayList<>();
+    final int numToList = 50; // Make it easier to change later
+    boolean removeLastAfterAdding = false; // boolean that becomes true once a 51st element appears, since we can delete it to save memory
+    for(int i=0; i<movies.size(); i++) {
+      Movie movie = movies.get(i);
+      int j = topSortedMovies.size();
+      removeLastAfterAdding = removeLastAfterAdding || j>=numToList;
+      while ( j>0 && (topSortedMovies.get(j-1).getRevenue()<movie.getRevenue()) ) {
+        j--;
+      }
+      if (j<numToList) {
+        topSortedMovies.add(j,movie);
+        if (removeLastAfterAdding) {topSortedMovies.remove(numToList);}
+      }
+    }
+
+    for (int i=0; i<numToList; i++) {
+      Movie movie = topSortedMovies.get(i);
+      System.out.println(i+1 + ". " + movie.getTitle() + ": " + movie.getRevenue());
+    }
+    askWhichMovie(topSortedMovies);
   }
 
   private void printMatchingMovies(ArrayList<Movie> matchingMovies) {
